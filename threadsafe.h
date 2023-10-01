@@ -13,7 +13,7 @@ namespace ThreadSafe {
     template<typename T, typename _CONTAINER, typename _CMP>
     class priority_queue {
         public:
-            ThreadSafe();
+            priority_queue();
 
             void push(T t) {
                 std::scoped_lock lock{access_mutex};
@@ -35,7 +35,7 @@ namespace ThreadSafe {
 
             std::optional<T> await_pop() {
                 std::unique_lock lock{access_mutex};
-                pop_cond.await(lock, [this](){return !pq.empty() || stop_running});
+                pop_cond.wait(lock, [this](){return !pq.empty() || stop_running;});
             }
 
             std::optional<T> top() {
@@ -65,7 +65,7 @@ namespace ThreadSafe {
         private:
             std::mutex access_mutex;
             std::priority_queue<T, _CONTAINER, _CMP> pq;
-            std::conditional_variable pop_cond;
+            std::condition_variable pop_cond;
             std::atomic_bool stop_running{false};
     };
 
